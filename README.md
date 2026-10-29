@@ -16,18 +16,38 @@ Licence: Apache-2.0 (`LICENSE.txt`); the navigation-library interface file is LG
 
 ## Install
 
-### Now: direct install
+There are two ways to install the extension before it is listed in Slicer's Extensions Manager. Use one of them, not both. Both files come from the same build:
 
-1. Get the test package (the folder or zip made by `tools/package_test_build.py`, or a clone of this repository) and unpack it.
-2. In Slicer open View > Python Console and paste the line that `tools/package_test_build.py` printed when it built the package. That line already contains the package's full path; use it as printed. (From a clone, build a package first, or write the same line yourself with the full path of your copy's `tools\install_dev.py`.)
+- `python tools/package_extension.py [destination folder]` writes the **extension package**, a zip named like `34645-win-amd64-MouseNav3D-git<commit>-<date>.zip` (default folder `dist/`). It prints which Slicer it is built for.
+- `python tools/package_test_build.py <destination folder>` writes the home test package: a folder `MouseNav3D_test_<date>` (with an `INSTALL.txt` that names the file for each way), the same folder as `MouseNav3D_test_<date>_direct-install.zip`, and the extension package next to them and inside the folder. It prints both install routes.
+
+### (a) Extensions Manager: Install from file
+
+1. If you installed with (b) before, first remove the `MouseNav3D` folder from Edit > Application Settings > Modules (Additional module paths) and restart Slicer, so that only one copy of the module is loaded.
+2. In Slicer open View > Extensions Manager, click "Install from file..." and choose the **extension package** zip (`34645-...-MouseNav3D-git...zip`).
+3. Restart Slicer. Open the module at Modules > Utilities > 3D Mouse Navigation. It is listed under the Extensions Manager's installed extensions and can be uninstalled there.
+
+The package is built for Slicer 5.12.x; `--slicer-version` builds it for another Slicer version. It is tested on Windows. Linux uses the same zip and layout and is expected to work, but is untested: the content is pure Python, and Slicer takes the operating system, architecture and revision from the running Slicer, not from the package. Outside macOS the revision (`--slicer-revision`) only changes the file name. macOS needs a different layout tied to one Slicer revision (`--os macosx`, untested). For another Slicer version or for macOS, install from the Extensions Manager's catalogue once the extension is listed, or use (b).
+
+Only the extension package works here. The direct-install zip is a plain folder copy; Install from file refuses it with "No extension description found in archive".
+
+### (b) Direct install (install_dev.py)
+
+1. If the extension is installed through the Extensions Manager (a), uninstall it there first and restart Slicer, so that only one copy of the module is loaded.
+2. Unpack `MouseNav3D_test_<date>_direct-install.zip` (or use the `MouseNav3D_test_<date>` folder, or a clone of this repository).
+3. In Slicer open View > Python Console and paste the line that `tools/package_test_build.py` printed (it is also in the folder's `INSTALL.txt`). The line contains the package's full path; use it as printed, or change the path if you moved the folder:
+
+   ```
+   p = r"<full path to the package>\tools\install_dev.py"; exec(open(p).read(), {"__file__": p})
+   ```
 
    It adds the `MouseNav3D` folder to Slicer's additional module paths (kept for later sessions) and loads the module without a restart. Open it at Modules > Utilities > 3D Mouse Navigation.
 
-To build the package: `python tools/package_test_build.py <destination folder>`; it prints the install line at the end.
+### Later: the Extensions Index
 
-### Later: Slicer Extensions Manager
+The repository is prepared for the Extensions Index (`docs/extensions-index/MouseNav3D.json`; steps in `docs/extensions-index/SUBMIT.md`). Once accepted, install "MouseNav3D" from Slicer's Extensions Manager for any Slicer version and OS the index builds.
 
-The repository is prepared for the Extensions Index (`docs/extensions-index/MouseNav3D.json`; steps in `docs/extensions-index/SUBMIT.md`). Once accepted, install "MouseNav3D" from Slicer's Extensions Manager. If you used the direct install before, first remove its `MouseNav3D` folder from Application Settings > Modules (Additional module paths) and restart Slicer, so that only one copy of the module is loaded.
+Switching from (b) to the index: first remove the `MouseNav3D` folder from the additional module paths, as in (a) step 1.
 
 A newly installed module starts the 3D mouse after a restart of Slicer, or as soon as its panel is opened.
 
@@ -98,6 +118,7 @@ Pure Python, no compiled code, no pip dependencies beyond what Slicer bundles.
 
 - Unit tests: `bash Testing/run_unit.sh` (uses `uv`).
 - Slicer self-tests: `bash Testing/run_slicer.sh` (Git Bash on Windows). Each `Testing/slicer/selftest_*.py` runs in Slicer 5.12.4 and writes `Testing/slicer/out/<name>.log` ending in `OVERALL: PASS` or `OVERALL: FAIL`; `ONLY=Testing/slicer/<file>.py` runs one file. The script's default Slicer is the author's per-user Windows install of 5.12.4; set `SLICER_EXE` to the path of your Slicer executable to use another one.
+- `selftest_install_from_file.py` builds the extension package, installs it through the Extensions Manager's install-from-file code into a temporary folder (child Slicers with `--disable-settings`; the real extensions folder and settings are checked unchanged) and loads the module from there.
 - `MOUSENAV3D_FORCE_FALLBACK=1` (environment variable, set before Slicer starts) skips the driver and uses the built-in reader, so fallback mode can be tried on a machine that has the driver.
 - `MOUSENAV3D_NO_AUTOSTART` (any value) keeps the module from starting the 3D mouse at Slicer's start.
 - Design notes: `docs/design.md`. Hardware findings: `docs/spike_report.md`. Checklist for a hardware test: `docs/HARDWARE_CHECKLIST.md`.

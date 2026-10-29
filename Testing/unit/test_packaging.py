@@ -1,4 +1,4 @@
-"""Packaging: the direct-install test package, and the Extensions Index readiness of the repository (every module
+"""Packaging: the home test package (direct install and the extension package), and the Extensions Index readiness of the repository (every module
 file is in the CMake lists, the metadata has no placeholders, the index entry matches CMakeLists.txt)."""
 import json
 import os
@@ -17,25 +17,43 @@ def read(*parts):
 
 
 def test_package_contents_and_install_line(tmp_path):
-    folder, zip_path, line = pkg.build(str(tmp_path), today="20261029")
+    folder, zip_path, line, ext_zip = pkg.build(str(tmp_path), today="20261029")
     assert os.path.basename(folder) == "MouseNav3D_test_20261029"
     for rel in ("MouseNav3D/MouseNav3D.py", "MouseNav3D/MouseNav3DLib/fallback/navigator.py",
                 "MouseNav3D/Resources/Icons/MouseNav3D.png", "tools/install_dev.py", "README.md",
-                "docs/HARDWARE_CHECKLIST.md", "LICENSE.txt", "LICENSE-LGPL.txt", "NOTICE.md"):
+                "docs/HARDWARE_CHECKLIST.md", "LICENSE.txt", "LICENSE-LGPL.txt", "NOTICE.md", "INSTALL.txt"):
         assert os.path.isfile(os.path.join(folder, *rel.split("/"))), rel
     assert not any("__pycache__" in base for base, _d, _f in os.walk(folder))
     assert line == f'p = r"{os.path.join(folder, "tools", "install_dev.py")}"; exec(open(p).read(), {{"__file__": p}})'
     assert os.path.isabs(os.path.join(folder, "tools", "install_dev.py"))
+    assert os.path.basename(zip_path) == "MouseNav3D_test_20261029_direct-install.zip"
     names = zipfile.ZipFile(zip_path).namelist()
     assert "MouseNav3D_test_20261029/tools/install_dev.py" in names
 
 
+def test_package_carries_the_extension_package_and_says_which_file_is_which(tmp_path):
+    folder, zip_path, line, ext_zip = pkg.build(str(tmp_path), today="20261029")
+    name = os.path.basename(ext_zip)
+    assert re.fullmatch(r"34645-\w+-\w+-MouseNav3D-git\w+-\d{4}-\d\d-\d\d\.zip", name), name
+    assert os.path.dirname(ext_zip) == str(tmp_path)  # next to the folder ...
+    assert os.path.isfile(os.path.join(folder, name))  # ... and inside it
+    assert any(n.endswith("/share/Slicer-5.12/MouseNav3D.s4ext") for n in zipfile.ZipFile(ext_zip).namelist())
+    text = open(os.path.join(folder, "INSTALL.txt"), encoding="utf-8").read()
+    assert "Install from file" in text and name in text and line in text
+    assert "No extension description found" in text and "Slicer 5.12" in text
+    # the direct-install zip is not an extension package: Install from file would refuse it
+    assert not any(n.endswith(".s4ext") for n in zipfile.ZipFile(zip_path).namelist())
+
+
 def test_rebuild_replaces_the_folder(tmp_path):
-    folder, _z, _l = pkg.build(str(tmp_path), today="20261029")
+    folder, _z, _l, _e = pkg.build(str(tmp_path), today="20261029")
     stale = os.path.join(folder, "stale.txt")
     open(stale, "w").close()
+    old_zip = folder + ".zip"  # the direct-install zip's earlier name
+    open(old_zip, "w").close()
     pkg.build(str(tmp_path), today="20261029")
     assert not os.path.exists(stale)
+    assert not os.path.exists(old_zip)
 
 
 def test_every_module_file_is_listed_in_cmake():

@@ -3,10 +3,11 @@
 For trying 3D Mouse Navigation on a real device (any 3Dconnexion SpaceMouse, for example a SpaceMouse Wireless or a
 SpaceMouse Enterprise) in Slicer 5.12.4.
 
-Install: View > Python Console, then paste the line that `tools/package_test_build.py` printed for your package (or,
-in a clone of the repository, the same line with the full path of your copy's `tools\install_dev.py`). Open Modules >
-Utilities > 3D Mouse Navigation. With 3DxWare running the panel reads "Connected to the 3Dconnexion driver" and says
-whether a 3D mouse is connected. Restart Slicer once and check that the mouse works without opening the panel.
+Install one way (see the package's `INSTALL.txt` or the README): View > Extensions Manager > Install from file... with
+the extension package zip (`34645-...-MouseNav3D-git...zip`) and a restart, or View > Python Console and the line that
+`tools/package_test_build.py` printed for your package (in a clone, the same line with the full path of your copy's
+`tools\install_dev.py`). Open Modules > Utilities > 3D Mouse Navigation. With 3DxWare running the panel reads
+"Connected to the 3Dconnexion driver" and says whether a 3D mouse is connected. Restart Slicer once and check that the mouse works without opening the panel.
 
 Write what felt wrong next to each line; "ok" is enough when it felt right.
 
