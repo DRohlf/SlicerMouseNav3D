@@ -1,0 +1,5 @@
+Testing/slicer/out/
+__pycache__/
+dist/
+.venv/
+.pytest_cache/
